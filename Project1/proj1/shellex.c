@@ -1,24 +1,30 @@
-#include "myshell.h"
+/* $begin shellmain */
+#include "csapp.h"
+#include<errno.h>
 #define MAXARGS   128
 
+/* Function prototypes */
 void eval(char *cmdline);
 int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 
-int main(void) {
-	char	cmdline[MAXLINE];
+int main() 
+{
+    char cmdline[MAXLINE]; /* Command line */
 
-	do{
-		printf("CSE4100-MP-P1>");
-		// Reading: Read the command from standard input.
-		fgets(cmdline, MAXLINE, stdin); 
-		if (feof(stdin))
-			exit(0);
-		// Parsing: transform the input string into command line arguments.
-		eval(cmdline);
-		} while (true);
+    while (1) {
+	/* Read */
+	printf("> ");                   
+	fgets(cmdline, MAXLINE, stdin); 
+	if (feof(stdin))
+	    exit(0);
+
+	/* Evaluate */
+	eval(cmdline);
+    } 
 }
-
+/* $end shellmain */
+  
 /* $begin eval */
 /* eval - Evaluate a command line */
 void eval(char *cmdline) 
@@ -41,9 +47,8 @@ void eval(char *cmdline)
 	/* Parent waits for foreground job to terminate */
 	if (!bg){ 
 	    int status;
-		if (waitpid(pid, &status, 0) < 0) unix_error("waitfg: waitpid error");
 	}
-	else //when there is backgrount process!
+	else//when there is backgrount process!
 	    printf("%d %s", pid, cmdline);
     }
     return;
@@ -53,9 +58,9 @@ void eval(char *cmdline)
 int builtin_command(char **argv) 
 {
     if (!strcmp(argv[0], "quit")) /* quit command */
-		exit(0);
+	exit(0);  
     if (!strcmp(argv[0], "&"))    /* Ignore singleton & */
-		return 1;
+	return 1;
     return 0;                     /* Not a builtin command */
 }
 /* $end eval */
@@ -93,4 +98,5 @@ int parseline(char *buf, char **argv)
     return bg;
 }
 /* $end parseline */
+
 
