@@ -37,7 +37,7 @@ void eval(char *cmdline)
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
     if (argv[0] == NULL)  
-	return;   /* Ignore empty lines */
+	    return;   /* Ignore empty lines */
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
         if (execve(argv[0], argv, environ) < 0) {	//ex) /bin/ls ls -al &
             printf("%s: Command not found.\n", argv[0]);

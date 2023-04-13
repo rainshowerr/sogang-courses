@@ -27,17 +27,10 @@ int main(void) {
 	} while (true);
 }
 
-/* $begin eval */
-/* eval - Evaluate a command line */
-void eval(char *cmdline) 
-{
-	char *argv[MAXARGS]; /* Argument list execve() */
-	char buf[MAXLINE];   /* Holds modified command line */
-	int bg;              /* Should the job run in bg or fg? */
+void execute(int bg, char **argv, char *sentence) {
 	pid_t pid;           /* Process id */
-	
-	strcpy(buf, cmdline);
-	bg = parseline(buf, argv); 
+
+	bg = parseline(sentence, argv); 
 	if (argv[0] == NULL)  
 		return;   /* Ignore empty lines */
 	if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
@@ -47,6 +40,7 @@ void eval(char *cmdline)
 				exit(0);
 			}
 		}
+		// 이거 여기있음 안될거같은데 내일 생각해보자..
 		/* Parent waits for foreground job to terminate */
 		if (!bg){ 
 			int status;
@@ -54,10 +48,27 @@ void eval(char *cmdline)
 				unix_error("waitpid error");
 		}
 		else //when there is backgrount process!
-			printf("%d %s", pid, cmdline);
+			printf("%d %s", pid, sentence);
 	}
+}
+
+
+
+/* $begin eval */
+/* eval - Evaluate a command line */
+void eval(char *cmdline) 
+{
+	char *argv[MAXARGS]; /* Argument list execve() */
+	char buf[MAXLINE];   /* Holds modified command line */
+	char *sentence[MAXLINE];
+	int bg;              /* Should the job run in bg or fg? */
+	
+	parse_sentence(cmdline, sentence);
+	// execute(argv, sentence[0]);
 	return;
 }
+/* $end eval */
+
 
 /* If first arg is a builtin command, run it and return true */
 int builtin_command(char **argv) 
@@ -80,11 +91,34 @@ int builtin_command(char **argv)
 	}
 	return 0;                     /* Not a builtin command */
 }
-/* $end eval */
+
+int parse_sentence(char *cmdline, char **sentence) {
+    int bg, cnt = 0;
+    char *delim;
+
+    cmdline[strlen(cmdline) - 1] = '|';
+    while (*cmdline && *cmdline == ' ')
+        cmdline++;
+    cnt = 0;
+    while(delim = strchr(cmdline, '|')) {
+        sentence[cnt++] = cmdline;
+        *delim = '\0';
+        cmdline = delim + 1;
+        while (*cmdline && (*cmdline == ' ')) /* Ignore spaces */
+            cmdline++;
+    }
+    sentence[cnt] = NULL;
+	if (cnt == 0)  /* Ignore blank line */
+		return 1;
+	/* Should the job run in the background? */
+    if ((bg = (*sentence[cnt-1] == '&')) != 0)
+		sentence[--cnt] = NULL;
+    return bg;
+}
 
 /* $begin parseline */
 /* parseline - Parse the command line and build the argv array */
-int parseline(char *buf, char **argv) 
+void parse_arg(char *buf, char **argv) 
 {
 	char *delim;         /* Points to first space delimiter */
 	int argc;            /* Number of args */
@@ -104,15 +138,6 @@ int parseline(char *buf, char **argv)
 			buf++;
 	}
 	argv[argc] = NULL;
-
-	if (argc == 0)  /* Ignore blank line */
-		return 1;
-
-    /* Should the job run in the background? */
-    if ((bg = (*argv[argc-1] == '&')) != 0)
-		argv[--argc] = NULL;
-
-    return bg;
 }
 /* $end parseline */
 

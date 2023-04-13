@@ -1,0 +1,23 @@
+ls -al
+history
+ls -al
+ls
+history
+ls -al
+ls
+history
+ls
+history
+ls
+
+ls
+mkdir k
+cd k
+ls
+cd ..
+rmdir k
+ls
+lls
+ls
+history
+clear
