@@ -1,8 +1,8 @@
 #include "myshell.h"
 
 void eval(char *cmdline);
-int parseline(char *buf, char **argv);
-int builtin_command(char **argv); 
+int builtin_command(char **argv);
+void execute(int bg, char *sentence, char **argv, int pid);
 
 int main(void) {
 	char	cmdline[MAXLINE];
@@ -27,12 +27,71 @@ int main(void) {
 	} while (true);
 }
 
-void execute(int bg, char **argv, char *sentence) {
-	pid_t pid;           /* Process id */
+void go(int bg, char **sentence, int pipenum, int cnt) {
+	int fd[2];
+	pid_t pid;
+	char buf[MAXLINE];
+	char *argv[MAXARGS];
 
-	bg = parseline(sentence, argv); 
-	if (argv[0] == NULL)  
+	parse_arg(sentence[cnt], argv);
+
+	if (pipe(fd) == -1)
+		exit(1);
+
+	if ((pid = Fork()) == -1)
+		exit(1);
+	// 부모 프로세스에서 쓰기
+	if (pid > 0) {
+		int status;
+		close(fd[0]);
+		// 마지막 명령어인 경우 표준출력으로 쓰기
+		if (cnt == pipenum)
+			execute(bg, sentence[cnt], argv, pid);
+		else {
+			dup2(fd[1], 1);
+			close(fd[1]);
+			execute(bg, sentence[cnt], argv, pid);
+		}
+		//Waitpid(pid, &status, 1);
+		exit(0);
+	}
+	// 자식 프로세스에서 읽어들이기
+	else if (pid == 0) {
+		int status;
+		if (cnt < pipenum) {
+			close(fd[1]);
+			dup2(fd[0], 0);
+			close(fd[0]);
+			go(bg, sentence, pipenum, cnt + 1);
+		}
+		exit(0);
+	}
+}
+
+/* $begin eval */
+/* eval - Evaluate a command line */
+void eval(char *cmdline) 
+{
+	int bg;
+	char *sentence[MAXLINE];
+	char *argv[MAXARGS];
+	int	pipenum = 0;
+	int pid;
+
+	bg = parse_sentence(cmdline, sentence, &pipenum);
+	if (sentence[0] == NULL)
 		return;   /* Ignore empty lines */
+	pipenum--;
+	if (pipenum == 0) {
+		parse_arg(sentence[0], argv);
+		execute(bg, sentence[0], argv, pid);
+	}
+	else
+		go(bg, sentence, pipenum, 0);
+}
+/* $end eval */
+
+void execute(int bg, char *sentence, char **argv, int pid) {
 	if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
 		if ((pid = Fork()) == 0) {
 			if (execvp(argv[0], argv) < 0) {	//ex) /bin/ls ls -al &
@@ -40,9 +99,8 @@ void execute(int bg, char **argv, char *sentence) {
 				exit(0);
 			}
 		}
-		// 이거 여기있음 안될거같은데 내일 생각해보자..
 		/* Parent waits for foreground job to terminate */
-		if (!bg){ 
+		if (!bg){
 			int status;
 			if (waitpid(pid, &status, 0) < 0)
 				unix_error("waitpid error");
@@ -51,24 +109,6 @@ void execute(int bg, char **argv, char *sentence) {
 			printf("%d %s", pid, sentence);
 	}
 }
-
-
-
-/* $begin eval */
-/* eval - Evaluate a command line */
-void eval(char *cmdline) 
-{
-	char *argv[MAXARGS]; /* Argument list execve() */
-	char buf[MAXLINE];   /* Holds modified command line */
-	char *sentence[MAXLINE];
-	int bg;              /* Should the job run in bg or fg? */
-	
-	parse_sentence(cmdline, sentence);
-	// execute(argv, sentence[0]);
-	return;
-}
-/* $end eval */
-
 
 /* If first arg is a builtin command, run it and return true */
 int builtin_command(char **argv) 
@@ -91,53 +131,3 @@ int builtin_command(char **argv)
 	}
 	return 0;                     /* Not a builtin command */
 }
-
-int parse_sentence(char *cmdline, char **sentence) {
-    int bg, cnt = 0;
-    char *delim;
-
-    cmdline[strlen(cmdline) - 1] = '|';
-    while (*cmdline && *cmdline == ' ')
-        cmdline++;
-    cnt = 0;
-    while(delim = strchr(cmdline, '|')) {
-        sentence[cnt++] = cmdline;
-        *delim = '\0';
-        cmdline = delim + 1;
-        while (*cmdline && (*cmdline == ' ')) /* Ignore spaces */
-            cmdline++;
-    }
-    sentence[cnt] = NULL;
-	if (cnt == 0)  /* Ignore blank line */
-		return 1;
-	/* Should the job run in the background? */
-    if ((bg = (*sentence[cnt-1] == '&')) != 0)
-		sentence[--cnt] = NULL;
-    return bg;
-}
-
-/* $begin parseline */
-/* parseline - Parse the command line and build the argv array */
-void parse_arg(char *buf, char **argv) 
-{
-	char *delim;         /* Points to first space delimiter */
-	int argc;            /* Number of args */
-	int bg;              /* Background job? */
-
-	buf[strlen(buf)-1] = ' ';  /* Replace trailing '\n' with space */
-	while (*buf && (*buf == ' ')) /* Ignore leading spaces */
-		buf++;
-
-	/* Build the argv list */
-	argc = 0;
-	while ((delim = strchr(buf, ' '))) {
-		argv[argc++] = buf;
-		*delim = '\0';
-		buf = delim + 1;
-		while (*buf && (*buf == ' ')) /* Ignore spaces */
-			buf++;
-	}
-	argv[argc] = NULL;
-}
-/* $end parseline */
-

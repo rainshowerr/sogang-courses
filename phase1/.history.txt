@@ -21,3 +21,11 @@ lls
 ls
 history
 clear
+ls
+lls
+t
+kk
+ㅇㄴ
+ls
+ls -al
+history

@@ -1,0 +1,80 @@
+ls
+ls -al | wc -l
+ls
+ls -al
+clear
+ls
+ls -al
+ls
+ls -al
+ls | wc
+ls | wc -l
+wc
+ㅣㄴ
+ls
+ㅣㄴ
+lls
+ls
+ls | wc -l
+ㅣㄴ
+ls
+ls -al
+ls -al | wc -l
+ls
+ls -al | wc -l
+ls
+ls -al
+ls -al | wc -l
+ls
+ls -al | wc -l
+ls -al
+ls
+ls -al
+ls -al | wc -l
+ls -al | wc
+ls -al | wc -l
+ls -al
+ls -al | wc
+ls
+ls -al | wc -l
+
+ls -al | wc -l
+ls
+ls -al
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls -al | cat | wc -l
+ls -al
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls
+ls -al | wc 0l
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls -al
+ls -al | wc -l
+ls -al | wc - l
+ls -al | wc -l
+ls -al | wc
+ls -al | wc -l

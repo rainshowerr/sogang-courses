@@ -27,19 +27,7 @@ int main(void) {
 	} while (true);
 }
 
-/* $begin eval */
-/* eval - Evaluate a command line */
-void eval(char *cmdline) 
-{
-	char *argv[MAXARGS]; /* Argument list execve() */
-	char buf[MAXLINE];   /* Holds modified command line */
-	int bg;              /* Should the job run in bg or fg? */
-	pid_t pid;           /* Process id */
-	
-	strcpy(buf, cmdline);
-	bg = parseline(buf, argv); 
-	if (argv[0] == NULL)  
-		return;   /* Ignore empty lines */
+void execute(int bg, char *cmdline, char **argv, int pid) {
 	if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
 		if ((pid = Fork()) == 0) {
 			if (execvp(argv[0], argv) < 0) {	//ex) /bin/ls ls -al &
@@ -56,7 +44,22 @@ void eval(char *cmdline)
 		else //when there is backgrount process!
 			printf("%d %s", pid, cmdline);
 	}
-	return;
+}
+
+/* $begin eval */
+/* eval - Evaluate a command line */
+void eval(char *cmdline) 
+{
+	char *argv[MAXARGS]; /* Argument list execve() */
+	char buf[MAXLINE];   /* Holds modified command line */
+	int bg;              /* Should the job run in bg or fg? */
+	pid_t pid;           /* Process id */
+	
+	strcpy(buf, cmdline);
+	bg = parseline(buf, argv); 
+	if (argv[0] == NULL)  
+		return;   /* Ignore empty lines */
+	execute(bg, cmdline, argv, pid);
 }
 
 /* If first arg is a builtin command, run it and return true */
