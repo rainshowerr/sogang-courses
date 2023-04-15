@@ -29,3 +29,8 @@ kk
 ls
 ls -al
 history
+ls
+history
+ls -al
+clear
+exit

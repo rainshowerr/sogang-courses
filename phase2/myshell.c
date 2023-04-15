@@ -1,8 +1,10 @@
 #include "myshell.h"
 
+#include <errno.h>
+
 void eval(char *cmdline);
 int builtin_command(char **argv);
-void execute(int bg, char *sentence, char **argv, int pid);
+void execute(int bg, char *sentence, char **argv);
 
 int main(void) {
 	char	cmdline[MAXLINE];
@@ -10,19 +12,21 @@ int main(void) {
 
 	getcwd(hispath, MAXLINE);
 	strcat(hispath, "/.history.txt");
-	do{
+
+	do while (1) {
 		printf("CSE4100-MP-P1>");
 		// Reading: Read the command from standard input.
 		Fgets(cmdline, MAXLINE, stdin);
 		if (feof(stdin))
 			exit(0);
+		// history에 추가해도 되는지 확인 후 추가
 		check_his_cmd(cmdline);
 		if (!is_duplicate(his, cmdline) && cmdline[0] != '!') {
 			his = Fopen(hispath, "a");
 			Fputs(cmdline, his);
 			Fclose(his);
 		}
-		// Parsing: transform the input string into command line arguments.
+		// Parsing & execute
 		eval(cmdline);
 	} while (true);
 }
@@ -37,34 +41,30 @@ void go(int bg, char **sentence, int pipenum, int cnt) {
 
 	if (pipe(fd) == -1)
 		exit(1);
-
 	if ((pid = Fork()) == -1)
 		exit(1);
-	// 부모 프로세스에서 쓰기
-	if (pid > 0) {
-		int status;
+	// 자식 프로세스에서 쓰기
+	if (pid == 0) {
 		close(fd[0]);
-		// 마지막 명령어인 경우 표준출력으로 쓰기
 		if (cnt == pipenum)
-			execute(bg, sentence[cnt], argv, pid);
+			execute(bg, sentence[cnt], argv);
 		else {
 			dup2(fd[1], 1);
 			close(fd[1]);
-			execute(bg, sentence[cnt], argv, pid);
+			execute(bg, sentence[cnt], argv);
 		}
-		//Waitpid(pid, &status, 1);
 		exit(0);
 	}
-	// 자식 프로세스에서 읽어들이기
-	else if (pid == 0) {
+	// 부모 프로세스에서 읽어들이기
+	if (pid > 0) {
 		int status;
+		close(fd[1]);
+		waitpid(pid, &status, 0);
+		dup2(fd[0], 0);
+		close(fd[0]);
 		if (cnt < pipenum) {
-			close(fd[1]);
-			dup2(fd[0], 0);
-			close(fd[0]);
 			go(bg, sentence, pipenum, cnt + 1);
 		}
-		exit(0);
 	}
 }
 
@@ -73,25 +73,29 @@ void go(int bg, char **sentence, int pipenum, int cnt) {
 void eval(char *cmdline) 
 {
 	int bg;
-	char *sentence[MAXLINE];
+	char **sentence = mem_init(MAXLINE);
 	char *argv[MAXARGS];
+	char buf[MAXLINE];
 	int	pipenum = 0;
 	int pid;
 
-	bg = parse_sentence(cmdline, sentence, &pipenum);
+	strcpy(buf, cmdline);
+	bg = parse_sentence(buf, sentence, &pipenum);
 	if (sentence[0] == NULL)
 		return;   /* Ignore empty lines */
 	pipenum--;
 	if (pipenum == 0) {
 		parse_arg(sentence[0], argv);
-		execute(bg, sentence[0], argv, pid);
+		execute(bg, sentence[0], argv);
 	}
-	else
+	else {
 		go(bg, sentence, pipenum, 0);
+	}
 }
 /* $end eval */
 
-void execute(int bg, char *sentence, char **argv, int pid) {
+void execute(int bg, char *sentence, char **argv) {
+	int pid;
 	if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
 		if ((pid = Fork()) == 0) {
 			if (execvp(argv[0], argv) < 0) {	//ex) /bin/ls ls -al &
@@ -102,11 +106,8 @@ void execute(int bg, char *sentence, char **argv, int pid) {
 		/* Parent waits for foreground job to terminate */
 		if (!bg){
 			int status;
-			if (waitpid(pid, &status, 0) < 0)
-				unix_error("waitpid error");
+			Waitpid(pid, &status, 0);
 		}
-		else //when there is backgrount process!
-			printf("%d %s", pid, sentence);
 	}
 }
 

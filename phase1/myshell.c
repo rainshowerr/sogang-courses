@@ -27,7 +27,9 @@ int main(void) {
 	} while (true);
 }
 
-void execute(int bg, char *cmdline, char **argv, int pid) {
+void execute(int bg, char *cmdline, char **argv) {
+	int pid;
+
 	if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
 		if ((pid = Fork()) == 0) {
 			if (execvp(argv[0], argv) < 0) {	//ex) /bin/ls ls -al &
@@ -38,11 +40,8 @@ void execute(int bg, char *cmdline, char **argv, int pid) {
 		/* Parent waits for foreground job to terminate */
 		if (!bg){ 
 			int status;
-			if (waitpid(pid, &status, 0) < 0)
-				unix_error("waitpid error");
+			Waitpid(pid, &status, 0);
 		}
-		else //when there is backgrount process!
-			printf("%d %s", pid, cmdline);
 	}
 }
 
@@ -59,7 +58,7 @@ void eval(char *cmdline)
 	bg = parseline(buf, argv); 
 	if (argv[0] == NULL)  
 		return;   /* Ignore empty lines */
-	execute(bg, cmdline, argv, pid);
+	execute(bg, cmdline, argv);
 }
 
 /* If first arg is a builtin command, run it and return true */

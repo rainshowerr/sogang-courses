@@ -1,24 +1,25 @@
 #include "myshell.h"
 
-int parse_sentence(char *cmdline, char **sentence, int *pipenum) {
+int parse_sentence(char *buf, char **sentence, int *pipenum) {
     int bg, cnt = 0;
     char *delim;
-    char line[MAXLINE];
+    size_t  len = strlen(buf);
 
-    cmdline[strlen(cmdline) - 1] = '|';
-    while (*cmdline && *cmdline == ' ')
-        cmdline++;
-    while (delim = strchr(cmdline, '|')) {
-        (*pipenum)++;
+    // substitute \n with pipe
+    buf[strlen(buf) - 1] = '|';
+    // push spaces
+    while (*buf && *buf == ' ')
+        buf++;
+    while (delim = strchr(buf, '|')) {
+		(*pipenum)++;
         *delim = '\0';
-        sentence[cnt] = cmdline;
-        cmdline = delim + 1;
-        while (*cmdline && (*cmdline == ' ')) /* Ignore spaces */
-            cmdline++;
+        strcpy(sentence[cnt], buf);
+        strcat(sentence[cnt], "\n");
         cnt++;
+        buf = delim + 1;
+        while (*buf && (*buf == ' ')) /* Ignore spaces */
+             buf++;
     }
-    for(int i = 0; sentence[i]; i++)
-        strcat(sentence[i], "\n");
     sentence[cnt] = NULL;
 	if (cnt == 0)  /* Ignore blank line */
 		return 1;
@@ -28,27 +29,38 @@ int parse_sentence(char *cmdline, char **sentence, int *pipenum) {
     return bg;
 }
 
-/* $begin parseline */
-/* parseline - Parse the command line and build the argv array */
-void parse_arg(char *sentence, char **argv) 
+void parse_arg(char *buf, char **argv) 
 {
 	char *delim;         /* Points to first space delimiter */
 	int argc;            /* Number of args */
 	int bg;              /* Background job? */
 
-	sentence[strlen(sentence)-1] = ' ';  /* Replace trailing '\n' with space */
-	while (*sentence && (*sentence == ' ')) /* Ignore leading spaces */
-		sentence++;
+	buf[strlen(buf)-1] = ' ';  /* Replace trailing '\n' with space */
+	while (*buf && (*buf == ' ')) /* Ignore leading spaces */
+		buf++;
 
 	/* Build the argv list */
 	argc = 0;
-	while ((delim = strchr(sentence, ' '))) {
-		argv[argc++] = sentence;
+	while ((delim = strchr(buf, ' '))) {
+		argv[argc++] = buf;
 		*delim = '\0';
-		sentence = delim + 1;
-		while (*sentence && (*sentence == ' ')) /* Ignore spaces */
-			sentence++;
+		buf = delim + 1;
+		while (*buf && (*buf == ' ')) /* Ignore spaces */
+			buf++;
 	}
 	argv[argc] = NULL;
 }
 /* $end parseline */
+
+char **mem_init(int size)
+{
+	char **arr = (char **)malloc(sizeof(char *) * size + 1);
+	int	i = 0;
+
+	while (i < size)
+	{
+		arr[i] = (char *)malloc(sizeof(char) * size + 1);
+		i++;
+	}
+	return (arr);
+}
