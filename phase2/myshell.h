@@ -7,10 +7,10 @@
 
 char	hispath[MAXLINE];
 
-int			is_duplicate(FILE *his, char *cmdline);
-void    	check_his_cmd(char *cmdline);
-int parse_sentence(char *cmdline, char **sentence, int *pipenum);
-void parse_arg(char *buf, char **argv);
-char **mem_init(int size);
+int		is_duplicate(FILE *his, char *cmdline);
+void    check_his_cmd(char *cmdline);
+void     parse_sentence(char *cmdline, char **sentence, int *pipenum);
+void    parse_arg(char *buf, char **argv);
+char    **mem_init(int size);
 
 #endif
