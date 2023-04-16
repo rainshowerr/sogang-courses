@@ -10,8 +10,10 @@ Just write down "make"
 
 ## flow
 1. Read command
+
 2. Check the command and add it to the .history.txt
-3. Check if there is a pipe (|) in the command.
+
+3. Check if there is a pipe ( | ) in the command.
 
 	3-1. If there is no pipe
 	

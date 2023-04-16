@@ -48,10 +48,8 @@ void	check_his_cmd(char *cmdline) {
 			}
 			char line[MAXLINE];
 			his = Fopen(hispath, "r");
-			for (int i = 0; i < atoi(cmdline); i++) { /* #번째 라인 읽기 */
-				memset(line, 0, sizeof(line));
+			for (int i = 0; i < atoi(cmdline); i++) /* #번째 라인 읽기 */
 				Fgets(line, MAXLINE, his);
-			}
 			Fclose(his);
 			strcpy(cmdline, line);
 			printf("%s", cmdline);
