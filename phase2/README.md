@@ -2,6 +2,7 @@
 
 ## phase 2
 Building my own shell
+
 Now, we can use pipe ( | )
 
 ## How to compile
