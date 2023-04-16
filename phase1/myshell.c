@@ -9,7 +9,10 @@ int main(void) {
 	char	cmdline[MAXLINE];
 	FILE	*his;
 
-	getcwd(hispath, MAXLINE);
+	if (!getcwd(hispath, MAXLINE)) {
+		printf("Failed to allocate hispath\n");
+		return (0);
+	}
 	strcat(hispath, "/.history.txt");
 
 	do{
