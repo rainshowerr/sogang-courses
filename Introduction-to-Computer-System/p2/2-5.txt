@@ -1,0 +1,110 @@
+(gdb) info reg $rsp
+rsp            0x7fffffffdfb0   0x7fffffffdfb0
+(gdb) info reg $rdi
+rdi            0x7fffffffdfc0   140737488347072+256 여기를 바꿔야함ㅇㅇ
+
+140737488347328 = 7fffffffe0c0
+
+ 0x0000000000400968 <+0>:     push   %rbx
+   0x0000000000400969 <+1>:     sub    $0x110,%rsp
+   0x0000000000400970 <+8>:     mov    $0x0,%ebx
+   0x0000000000400975 <+13>:    callq  0x400803 <usage>
+   0x000000000040097a <+18>:    mov    $0x4,%esi
+   0x000000000040097f <+23>:    mov    %rsp,%rdi
+   0x0000000000400982 <+26>:    callq  0x400834 <safe_gets> // safe_gets(~, 4)
+   0x0000000000400987 <+31>:    test   %eax,%eax
+   0x0000000000400989 <+33>:    js     0x4009c6 <manage_students+94> // 못읽어왔음 점프
+   0x000000000040098b <+35>:    movzbl (%rsp),%eax
+
+   0x000000000040098f <+39>:    cmp    $0x41,%al // A인지 확인
+   0x0000000000400991 <+41>:    jne    0x4009a4 <manage_students+60>
+   0x0000000000400993 <+43>:    mov    %ebx,%esi
+   0x0000000000400995 <+45>:    lea    0x10(%rsp),%rdi
+   0x000000000040099a <+50>:    callq  0x400886 <add_student>
+   0x000000000040099f <+55>:    add    $0x1,%ebx // 학생수 하나 늘리는건가
+   0x00000000004009a2 <+58>:    jmp    0x400975 <manage_students+13>
+
+   0x00000000004009a4 <+60>:    cmp    $0x55,%al // U인지 확인
+   0x00000000004009a6 <+62>:    jne    0x4009b6 <manage_students+78>
+   0x00000000004009a8 <+64>:    mov    %ebx,%esi
+   0x00000000004009aa <+66>:    lea    0x10(%rsp),%rdi
+   0x00000000004009af <+71>:    callq  0x4008e7 <update_major>
+   0x00000000004009b4 <+76>:    jmp    0x400975 <manage_students+13>
+
+   0x00000000004009b6 <+78>:    cmp    $0x45,%al // E인지 확인
+   0x00000000004009b8 <+80>:    je     0x4009c6 <manage_students+94>
+// 다른 문자인 경우
+   0x00000000004009ba <+82>:    mov    $0x400af5,%edi
+   0x00000000004009bf <+87>:    callq  0x400600 <puts@plt>
+   0x00000000004009c4 <+92>:    jmp    0x400975 <manage_students+13>
+   0x00000000004009c6 <+94>:    add    $0x110,%rsp
+   0x00000000004009cd <+101>:   pop    %rbx
+   0x00000000004009ce <+102>:   retq   
+
+-
+bler code for function add_student:
+   0x0000000000400886 <+0>:     push   %rbp
+   0x0000000000400887 <+1>:     push   %rbx
+   0x0000000000400888 <+2>:     sub    $0x8,%rsp
+
+   0x000000000040088c <+6>:     mov    %rdi,%rbx // rbx는 rsp+10을 가리킴
+   0x000000000040088f <+9>:     mov    %esi,%ebp
+   0x0000000000400891 <+11>:    mov    $0x400b30,%edi // Input student name (maxlen=8):
+   0x0000000000400896 <+16>:    callq  0x400600 <puts@plt>
+   0x000000000040089b <+21>:    movslq %ebp,%rdi
+   0x000000000040089e <+24>:    shl    $0x4,%rdi
+   0x00000000004008a2 <+28>:    add    %rdi,%rbx // 16을 곱해서 더함. student name의 주소 계산을위해
+   0x00000000004008a5 <+31>:    mov    $0x8,%esi // max_id = 8
+   0x00000000004008aa <+36>:    mov    %rbx,%rdi // student name의 주소를 rdi에 저장
+   0x00000000004008ad <+39>:    callq  0x400834 <safe_gets>
+   0x00000000004008b2 <+44>:    mov    $0x400b50,%edi // Input student major (maxlen=8):
+   0x00000000004008b7 <+49>:    callq  0x400600 <puts@plt>
+   0x00000000004008bc <+54>:    lea    0x8(%rbx),%rdi // student name의 주소에 8 더함
+   0x00000000004008c0 <+58>:    mov    $0x8,%esi // major 길이 8
+   0x00000000004008c5 <+63>:    callq  0x400834 <safe_gets> // major 입력받음
+   0x00000000004008ca <+68>:    mov    %ebp,%edx
+   0x00000000004008cc <+70>:    mov    $0x400b70,%esi // Added a new student (ID = 0)
+   0x00000000004008d1 <+75>:    mov    $0x1,%edi // 출력형식지정자개수
+   0x00000000004008d6 <+80>:    mov    $0x0,%eax // 반환값
+   0x00000000004008db <+85>:    callq  0x400650 <__printf_chk@plt>
+   0x00000000004008e0 <+90>:    add    $0x8,%rsp
+   0x00000000004008e4 <+94>:    pop    %rbx
+   0x00000000004008e5 <+95>:    pop    %rbp
+   0x00000000004008e6 <+96>:    retq  
+
+-
+Dump of assembler code for function update_major:
+   0x00000000004008e7 <+0>:     push   %rbp
+   0x00000000004008e8 <+1>:     push   %rbx
+   0x00000000004008e9 <+2>:     sub    $0x18,%rsp
+   0x00000000004008ed <+6>:     mov    %rdi,%rbp // rbp는 rsp+0x10
+   0x00000000004008f0 <+9>:     mov    %esi,%ebx
+   0x00000000004008f2 <+11>:    mov    $0x400b90,%edi
+   0x00000000004008f7 <+16>:    callq  0x400600 <puts@plt> // 업데이트할 아이디써라
+   0x00000000004008fc <+21>:    lea    0xb(%rsp),%rdx
+   0x0000000000400901 <+26>:    lea    0xc(%rsp),%rsi
+   0x0000000000400906 <+31>:    mov    $0x400aca,%edi
+   0x000000000040090b <+36>:    mov    $0x0,%eax
+   0x0000000000400910 <+41>:    callq  0x400670 <__isoc99_scanf@plt>// 아이디 받고
+   0x0000000000400915 <+46>:    cmp    %ebx,0xc(%rsp)
+   0x0000000000400919 <+50>:    jl     0x400927 <update_major+64> // 아이디가 작음 점프
+   0x000000000040091b <+52>:    mov    $0x400acf,%edi
+   0x0000000000400920 <+57>:    callq  0x400600 <puts@plt> // invalid id?
+   0x0000000000400925 <+62>:    jmp    0x400961 <update_major+122>
+
+   0x0000000000400927 <+64>:    mov    $0x400bb0,%edi
+   0x000000000040092c <+69>:    callq  0x400600 <puts@plt> // 전공 써라
+   0x0000000000400931 <+74>:    movslq 0xc(%rsp),%rax
+   0x0000000000400936 <+79>:    shl    $0x4,%rax
+   0x000000000040093a <+83>:    lea    0x8(%rbp,%rax,1),%rdi
+   0x000000000040093f <+88>:    mov    $0x8,%esi
+   0x0000000000400944 <+93>:    callq  0x400834 <safe_gets>
+   0x0000000000400949 <+98>:    mov    0xc(%rsp),%edx
+   0x000000000040094d <+102>:   mov    $0x400ada,%esi
+   0x0000000000400952 <+107>:   mov    $0x1,%edi
+   0x0000000000400957 <+112>:   mov    $0x0,%eax
+   0x000000000040095c <+117>:   callq  0x400650 <__printf_chk@plt>
+   0x0000000000400961 <+122>:   add    $0x18,%rsp
+   0x0000000000400965 <+126>:   pop    %rbx
+   0x0000000000400966 <+127>:   pop    %rbp
+   0x0000000000400967 <+128>:   retq   
